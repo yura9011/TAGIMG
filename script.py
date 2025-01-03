@@ -33,7 +33,8 @@ def analyze_image_content_gemini(image_path: str) -> Dict[str, Any]:
         "basic_description": "A basic description of the image.",
         "persuasive_description": "A default description for images that cannot be analyzed.",
         "key_styles": [],
-        "distinctive_elements": []
+        "distinctive_elements": [],
+        "base_description": "A basic, plain description for fallback."
     }
     try:
         with open(image_path, "rb") as image_file:
@@ -88,7 +89,6 @@ def analyze_image_content_gemini(image_path: str) -> Dict[str, Any]:
             logging.error(f"TypeError processing Gemini response for {image_path}: {e}, Text: {json_text}")
             default_error_response["persuasive_description"] = response.text
             return default_error_response
-
 
     except Exception as e:
         logging.error(f"Error analyzing image {image_path} with Gemini API: {e}")
@@ -187,11 +187,9 @@ def generate_compact_title_and_use_case(analysis_results: Dict, filename: str) -
            title_parts.extend(base_description.split()[:2])
        title_parts.extend(generate_default_main_title(filename).split()[:3])
 
-
     persuasive_description = analysis_results.get("persuasive_description", "").lower()
     suggested_use_cases = analysis_results.get("suggested_use_cases", [])
     suggested_target_audience = analysis_results.get("suggested_target_audience", [])
-
 
     use_case_parts = []
     if suggested_use_cases:
@@ -227,42 +225,35 @@ def generate_keywords(analysis_results: Dict, title: str, description: str) -> L
             unique_keywords.update(SYNONYMS[keyword])
         else:
             unique_keywords.add(keyword)
-    unique_keywords.discard("")
-    unique_keywords.discard("a")
-    unique_keywords.discard("the")
-    unique_keywords.discard("of")
-    unique_keywords = list(unique_keywords)[:50]
 
-    return unique_keywords
+    # Remove common and empty keywords
+    common_words = {"a", "an", "the", "for", "with", "of", "is", ""}
+    unique_keywords = [keyword for keyword in unique_keywords if keyword not in common_words]
+
+    return list(unique_keywords)[:50]
 
 def generate_main_title(analysis_results: Dict) -> str:
-    """Generates an attractive title with selling keywords."""
-    suggested_title = analysis_results.get("suggested_title")
-    if suggested_title:
-        return suggested_title
+    """Generates an attractive title with selling keywords, prioritizing Gemini's suggestions."""
+    if analysis_results.get("suggested_title"):
+        return analysis_results["suggested_title"]
 
     title_parts = []
-    key_styles = analysis_results.get("key_styles", [])
-    distinctive_elements = analysis_results.get("distinctive_elements", [])
-    if key_styles:
-        title_parts.extend([style.replace(" ", "") for style in key_styles[:1]])
-    if distinctive_elements:
-        title_parts.extend([re.sub(r'\W+', '', elem) for elem in distinctive_elements[:1]])
+    key_styles = analysis_results.get("key_styles", [])[:2]
+    distinctive_elements = analysis_results.get("distinctive_elements", [])[:2]
 
-    selling_keywords = ["unique", "original", "impactful", "eye-catching", "exclusive"]
-    import random
-    if selling_keywords and random.random() < 0.5:
-        title_parts.append(random.choice(selling_keywords))
-    if not title_parts:
-        filename = os.path.basename("")
-        base_description = analysis_results.get("basic_description", "")
-        if base_description:
-          return f"{base_description[:30]}".capitalize()
-        else:
-          name_part = os.path.splitext(filename)[0].replace("_", " ").capitalize()
-          return f"{name_part} - Image"
-    return " ".join(title_parts[:5]).capitalize()
+    title_parts.extend([style.replace(" ", "") for style in key_styles if style])
+    title_parts.extend([re.sub(r'\W+', '', elem) for elem in distinctive_elements if elem])
 
+    if title_parts:
+        return " ".join(title_parts).capitalize()
+
+    base_description = analysis_results.get("basic_description")
+    if base_description:
+        return base_description[:50].capitalize()
+
+    filename = os.path.basename("")  # This will be an empty string
+    name_part = os.path.splitext(filename)[0].replace("_", " ").capitalize()
+    return f"{name_part} - Image"
 
 def generate_title_variants(main_title: str, analysis_results: Dict) -> List[str]:
     """Generates variants of the main title for different use cases."""
@@ -278,21 +269,27 @@ def generate_title_variants(main_title: str, analysis_results: Dict) -> List[str
     return variants
 
 def generate_detailed_description(analysis_results: Dict) -> str:
-    """Generates a structured and persuasive description."""
-    persuasive_description = analysis_results.get("persuasive_description", "")
-    base_description = analysis_results.get("basic_description", "")
+    """Generates a structured and persuasive description, prioritizing Gemini's insights."""
+    if analysis_results.get("persuasive_description"):
+        return analysis_results["persuasive_description"]
+
+    base_description = analysis_results.get("basic_description")
+    if base_description:
+        return base_description
+
+    description_parts = []
     key_styles = analysis_results.get("key_styles", [])
     distinctive_elements = analysis_results.get("distinctive_elements", [])
 
-    description_parts = []
-    if base_description and base_description !=  "A basic description of the image.":
-      description_parts.append(base_description)
-    if persuasive_description and persuasive_description != "No description available.":
-      description_parts.append(persuasive_description)
+    if base_description:
+        description_parts.append(base_description)
     if key_styles:
         description_parts.append(f"Featuring elements of {', '.join(key_styles)}.")
     if distinctive_elements:
         description_parts.append(f"Notably showcasing {', '.join(distinctive_elements)}.")
+
+    if not description_parts:
+        return "A default description for images that cannot be analyzed."
 
     call_to_action = [
         "Perfect for your next creative project.",
@@ -303,7 +300,6 @@ def generate_detailed_description(analysis_results: Dict) -> str:
     import random
     description_parts.append(random.choice(call_to_action))
     return " ".join(description_parts)[:250].strip()
-
 
 def generate_concise_description(analysis_results: Dict) -> str:
     """Generates a concise description for the filename."""
@@ -375,7 +371,6 @@ def generate_new_filename(original_filename: str, analysis_results: Dict) -> str
       counter += 1
     return f"{base_filename}{ '' if counter==1 else f'_{counter-1}'}.{extension}"
 
-
 def generate_final_output(analysis_results: Dict, new_filename: str, original_filename: str) -> str:
     """Generates a string with a format that is easy to copy and paste."""
     title_and_use_case = generate_compact_title_and_use_case(analysis_results, original_filename)
@@ -418,10 +413,10 @@ def process_image(image_path: str) -> Dict:
         extension = extension[1:].lower()
 
         # Generate default metadata
-        default_title = generate_default_main_title(original_filename)
-        default_description = generate_default_detailed_description(original_filename, {}, {})
-        default_filename = generate_default_filename(original_filename)
-        default_output = f"""*   **Título + Caso de Uso:** {default_title} - Default
+        default_title = "Unprocessed Image"
+        default_description = "Error during processing. Please check the logs for details."
+        default_filename = f"Error_{os.path.splitext(original_filename)[0]}.{extension}"
+        default_output = f"""*   **Título + Caso de Uso:** {default_title}
 *   **Keywords:**  """
 
         return {
@@ -469,6 +464,17 @@ def main():
                     except OSError as e:
                         logging.error(f"Error renaming file '{os.path.basename(old_filepath)}': {e}")
                         result["error"] = f"Error renaming the file: {e}"
+                elif "new_filename" in result and result.get("error"):
+                    # Rename files that failed processing with a cleaned-up filename
+                    old_filepath = os.path.join(root, result["original_filename"])
+                    new_filename = generate_new_filename(result["original_filename"], {})  # Generate a clean default filename
+                    new_filepath = os.path.join(root, new_filename)
+                    try:
+                        if old_filepath != new_filepath:
+                            os.rename(old_filepath, new_filepath)
+                            logging.info(f"Renamed (Error) '{os.path.basename(old_filepath)}' to '{new_filename}'")
+                    except OSError as e:
+                        logging.error(f"Error renaming file (Error) '{os.path.basename(old_filepath)}': {e}")
 
     # Generate log file
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
