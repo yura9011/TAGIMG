@@ -7,10 +7,12 @@ from datetime import datetime
 from typing import List, Dict, Tuple, Any
 import google.generativeai as genai
 import re
+import time
+from google.api_core.exceptions import ResourceExhausted, ServiceUnavailable
 
 # Configure logging
 logging.basicConfig(filename='image_processing.log', level=logging.INFO,
-                    format='%(asctime)s - %(levelname)s - %(message)s')
+                    format='%(asctime)s - %(levelname)s - %(message)s', encoding='utf-8')
 
 # --- Gemini API Configuration ---
 try:
@@ -24,9 +26,14 @@ if not GOOGLE_API_KEY:
 genai.configure(api_key=GOOGLE_API_KEY)
 model = genai.GenerativeModel(model_name="gemini-2.0-flash-exp")
 
+# --- Constants for API Handling ---
+MAX_RETRIES = 5
+INITIAL_DELAY = 1
+DELAY_BETWEEN_REQUESTS = 1
+
 # --- Gemini API Interaction ---
-def analyze_image_content_gemini(image_path: str) -> Dict[str, Any]:
-    """Analyzes image content using the Gemini API, enforcing JSON format and handling errors."""
+def analyze_image_content_gemini(image_path: str, max_retries: int = MAX_RETRIES, initial_delay: int = INITIAL_DELAY) -> Dict[str, Any]:
+    """Analyzes image content using the Gemini API, enforcing JSON format and handling errors with retries."""
     logging.info(f"Analyzing image with Gemini API: {image_path}")
     default_error_response = {
         "suggested_title": "Unprocessed Image",
@@ -36,63 +43,77 @@ def analyze_image_content_gemini(image_path: str) -> Dict[str, Any]:
         "distinctive_elements": [],
         "base_description": "A basic, plain description for fallback."
     }
-    try:
-        with open(image_path, "rb") as image_file:
-            image_data = image_file.read()
-
-        contents = [
-            {
-                "mime_type": "image/png" if image_path.lower().endswith(".png") else "image/jpeg",
-                "data": image_data
-            },
-            """Suggest a short, effective sales title for this image in English. Provide a basic description of the image. Describe the image for a client, highlighting its benefits and potential uses in English. List the key artistic styles and the most impactful distinctive elements of the image in English. Provide the response strictly in JSON format.
-
-            Expected JSON Format:
-            {
-              "suggested_title": "Short sales title",
-              "basic_description": "A basic, plain description of the image",
-              "persuasive_description": "Client-focused description highlighting benefits and uses",
-              "key_styles": ["Style 1", "Style 2"],
-              "distinctive_elements": ["Element 1", "Element 2"],
-                "base_description": "A basic, plain description for fallback."
-            }
-
-            If the image is abstract, describe the emotions and interpretations it may evoke.
-            """
-        ]
-
-        response = model.generate_content(contents)
-        logging.info(f"Raw Gemini API response: {response.text!r}")
-
-        if response.prompt_feedback and response.prompt_feedback.blockReason:
-            logging.error(f"Gemini API blocked the prompt for {image_path}. Reason: {response.prompt_feedback.blockReason}")
-            return default_error_response
-
-        if not response.candidates:
-            logging.error(f"Gemini API returned no candidates for {image_path}.")
-            return default_error_response
-
-        json_text = response.text.strip()
+    for attempt in range(max_retries):
         try:
-            if json_text.startswith('```json'):
-                json_text = json_text[len('```json'):].strip()
-            if json_text.endswith('```'):
-                json_text = json_text[:-len('```')].strip()
-            analysis_results = json.loads(json_text)
-            logging.info(f"Gemini API analysis successful for {image_path}")
-            return analysis_results
-        except json.JSONDecodeError as e:
-            logging.error(f"Error decoding Gemini API response for {image_path}: {e}, Text: {json_text}")
-            default_error_response["persuasive_description"] = response.text
-            return default_error_response
-        except TypeError as e:
-            logging.error(f"TypeError processing Gemini response for {image_path}: {e}, Text: {json_text}")
-            default_error_response["persuasive_description"] = response.text
-            return default_error_response
+            with open(image_path, "rb") as image_file:
+                image_data = image_file.read()
 
-    except Exception as e:
-        logging.error(f"Error analyzing image {image_path} with Gemini API: {e}")
-        return default_error_response
+            contents = [
+                {
+                    "mime_type": "image/png" if image_path.lower().endswith(".png") else "image/jpeg",
+                    "data": image_data
+                },
+                """Suggest a short, effective sales title for this image in English. Provide a basic description of the image. Describe the image for a client, highlighting its benefits and potential uses in English. List the key artistic styles and the most impactful distinctive elements of the image in English. Provide the response strictly in JSON format.
+
+                Expected JSON Format:
+                {
+                  "suggested_title": "Short sales title",
+                  "basic_description": "A basic, plain description of the image",
+                  "persuasive_description": "Client-focused description highlighting benefits and uses",
+                  "key_styles": ["Style 1", "Style 2"],
+                  "distinctive_elements": ["Element 1", "Element 2"],
+                    "base_description": "A basic, plain description for fallback."
+                }
+
+                If the image is abstract, describe the emotions and interpretations it may evoke.
+                """
+            ]
+
+            response = model.generate_content(contents)
+            logging.info(f"Raw Gemini API response: {response.text!r}")
+
+            if response.prompt_feedback and response.prompt_feedback.blockReason:
+                logging.error(f"Gemini API blocked the prompt for {image_path}. Reason: {response.prompt_feedback.blockReason}")
+                return default_error_response
+
+            if not response.candidates:
+                logging.error(f"Gemini API returned no candidates for {image_path}.")
+                return default_error_response
+
+            json_text = response.text.strip()
+            try:
+                if json_text.startswith('```json'):
+                    json_text = json_text[len('```json'):].strip()
+                if json_text.endswith('```'):
+                    json_text = json_text[:-len('```')].strip()
+                analysis_results = json.loads(json_text)
+                logging.info(f"Gemini API analysis successful for {image_path}")
+                return analysis_results
+            except json.JSONDecodeError as e:
+                logging.error(f"Error decoding Gemini API response for {image_path}: {e}, Text: {json_text}")
+                default_error_response["persuasive_description"] = response.text
+                return default_error_response
+            except TypeError as e:
+                logging.error(f"TypeError processing Gemini response for {image_path}: {e}, Text: {json_text}")
+                default_error_response["persuasive_description"] = response.text
+                return default_error_response
+
+        except (ResourceExhausted, ServiceUnavailable) as e:
+            logging.warning(f"Gemini API quota or availability error for {image_path} (Attempt {attempt + 1}/{max_retries}): {e}")
+            if attempt < max_retries - 1:
+                delay = initial_delay * (2 ** attempt)
+                logging.info(f"Retrying in {delay:.2f} seconds...")
+                time.sleep(delay)
+            else:
+                logging.error(f"Failed to analyze {image_path} after {max_retries} retries due to API errors.")
+                return default_error_response
+        except Exception as e:
+            logging.error(f"Error analyzing image {image_path} with Gemini API: {e}")
+            return default_error_response
+        finally:
+            time.sleep(DELAY_BETWEEN_REQUESTS)
+
+    return default_error_response
 
 # --- Metadata Generation Functions ---
 DEFAULT_ABBREVIATIONS = {
@@ -203,34 +224,25 @@ def generate_compact_title_and_use_case(analysis_results: Dict, filename: str) -
 
 def generate_keywords(analysis_results: Dict, title: str, description: str) -> List[str]:
     """Generates a list of optimized keywords for Adobe Stock search."""
-    keywords = []
-    key_styles = analysis_results.get("key_styles", [])
-    distinctive_elements = analysis_results.get("distinctive_elements", [])
-    suggested_use_cases = analysis_results.get("suggested_use_cases", [])
-    suggested_target_audience = analysis_results.get("suggested_target_audience", [])
-    basic_description = analysis_results.get("basic_description", "").lower()
-    persuasive_description = analysis_results.get("persuasive_description", "").lower()
+    keywords = set()
+    text_to_process = [
+        title.lower(),
+        analysis_results.get("basic_description", "").lower(),
+        analysis_results.get("persuasive_description", "").lower()
+    ]
 
-    keywords.extend([item.lower() for item in key_styles if item])
-    keywords.extend([item.lower() for item in distinctive_elements if item])
-    keywords.extend(basic_description.split())
-    keywords.extend(persuasive_description.split())
-    keywords.extend([item.lower() for item in suggested_use_cases if item])
-    keywords.extend([item.lower() for item in suggested_target_audience if item])
-    keywords.extend(title.lower().split())
-
-    unique_keywords = set()
-    for keyword in keywords:
-        if keyword in SYNONYMS:
-            unique_keywords.update(SYNONYMS[keyword])
-        else:
-            unique_keywords.add(keyword)
+    for text in text_to_process:
+      for word in text.split():
+          if word in SYNONYMS:
+            keywords.update(SYNONYMS[word])
+          else:
+            keywords.add(word)
 
     # Remove common and empty keywords
     common_words = {"a", "an", "the", "for", "with", "of", "is", ""}
-    unique_keywords = [keyword for keyword in unique_keywords if keyword not in common_words]
+    unique_keywords = [keyword for keyword in keywords if keyword not in common_words]
 
-    return list(unique_keywords)[:50]
+    return list(unique_keywords)[:25] # Limit to 25 keywords
 
 def generate_main_title(analysis_results: Dict) -> str:
     """Generates an attractive title with selling keywords, prioritizing Gemini's suggestions."""
@@ -268,7 +280,7 @@ def generate_title_variants(main_title: str, analysis_results: Dict) -> List[str
 
     return variants
 
-def generate_detailed_description(analysis_results: Dict) -> str:
+def generate_detailed_description(filename: str, analysis_results: Dict) -> str:
     """Generates a structured and persuasive description, prioritizing Gemini's insights."""
     if analysis_results.get("persuasive_description"):
         return analysis_results["persuasive_description"]
@@ -319,23 +331,71 @@ def generate_concise_description(analysis_results: Dict) -> str:
 
     return "_".join(parts)[:50]
 
-def suggest_use_cases(analysis_results: Dict) -> List[str]:
-    """Suggests relevant use cases based on detected features."""
-    keywords = [item.lower() for item in analysis_results.get("key_styles", []) + analysis_results.get("distinctive_elements", []) if item]
-    use_cases = [DEFAULT_ABBREVIATIONS.get(case.lower(), case[:4]) for case in ["Commercial", "Advertising", "Marketing", "Editorial", "SocialMedia", "WebDesign", "Creative"] if any(keyword in case.lower() for keyword in keywords)]
-    return use_cases[:3] if use_cases else ["Img"]
+def suggest_use_cases(analysis_results: Dict, title: str, description: str) -> List[str]:
+    """Suggests relevant use cases based on the analysis results, title and description"""
+    keywords = set()
+    text_to_process = [
+        title.lower(),
+        analysis_results.get("basic_description", "").lower(),
+        analysis_results.get("persuasive_description", "").lower()
+    ]
 
-def suggest_target_audience(analysis_results: Dict) -> List[str]:
-    """Suggests target audience based on detected features."""
-    keywords = [item.lower() for item in analysis_results.get("key_styles", []) + analysis_results.get("distinctive_elements", []) if item]
-    audiences = [DEFAULT_ABBREVIATIONS.get(audience.lower(), audience[:4]) for audience in ["Artists", "Designers", "Marketers", "Editors", "ContentCreators", "SmallBusiness"] if any(keyword in audience.lower() for keyword in keywords)]
-    return audiences[:3] if audiences else ["Data"]
+    for text in text_to_process:
+      for word in text.split():
+          keywords.add(word)
+
+    use_cases = []
+    if "advertising" in keywords or "commercial" in keywords or "marketing" in keywords:
+        use_cases.append("Commercial")
+    if "editorial" in keywords:
+        use_cases.append("Editorial")
+    if "social" in keywords or "media" in keywords:
+       use_cases.append("Social Media")
+    if "web" in keywords or "design" in keywords:
+        use_cases.append("Web Design")
+    if "creative" in keywords or "art" in keywords or "illustration" in keywords or "painting" in keywords or "drawing" in keywords:
+       use_cases.append("Creative")
+
+    if use_cases:
+        return [DEFAULT_ABBREVIATIONS.get(use, use) for use in use_cases][:3]
+    else:
+        return ["Image"]
+def suggest_target_audience(analysis_results: Dict, title: str, description: str) -> List[str]:
+    """Suggests target audience based on the analysis results, title and description"""
+    keywords = set()
+    text_to_process = [
+        title.lower(),
+        analysis_results.get("basic_description", "").lower(),
+        analysis_results.get("persuasive_description", "").lower()
+    ]
+
+    for text in text_to_process:
+      for word in text.split():
+          keywords.add(word)
+
+    audiences = []
+    if "artists" in keywords or "art" in keywords:
+        audiences.append("Artists")
+    if "designers" in keywords or "design" in keywords:
+        audiences.append("Designers")
+    if "marketers" in keywords or "marketing" in keywords:
+       audiences.append("Marketers")
+    if "editors" in keywords or "editorial" in keywords:
+        audiences.append("Editors")
+    if "content" in keywords or "creators" in keywords:
+        audiences.append("Content Creators")
+    if "small" in keywords or "business" in keywords:
+      audiences.append("Small Business")
+    if audiences:
+        return [DEFAULT_ABBREVIATIONS.get(ta, ta) for ta in audiences][:3]
+    else:
+        return ["Data"]
 
 def generate_new_filename(original_filename: str, analysis_results: Dict) -> str:
     """Generates an informative and useful filename, with fallback."""
     concise_description = generate_concise_description(analysis_results)
-    use_cases = suggest_use_cases(analysis_results)
-    target_audience = suggest_target_audience(analysis_results)
+    use_cases = suggest_use_cases(analysis_results, "", "")
+    target_audience = suggest_target_audience(analysis_results, "", "")
     base_description = analysis_results.get("basic_description", "").lower()
 
     filename_parts = [concise_description]
@@ -359,7 +419,7 @@ def generate_new_filename(original_filename: str, analysis_results: Dict) -> str
 
     if not base_filename:  # Fallback if everything else fails
         name = os.path.splitext(original_filename)[0]
-        name = "".join([DEFAULT_ABBREVIATIONS.get(word.lower(), word[:4].capitalize()) for word in name.split("_")[:3]])
+        # Keep original underscores in fallback
         return f"{name}_Img_Data.{extension}"
 
     # Ensure unique filenames with a counter
@@ -371,41 +431,50 @@ def generate_new_filename(original_filename: str, analysis_results: Dict) -> str
       counter += 1
     return f"{base_filename}{ '' if counter==1 else f'_{counter-1}'}.{extension}"
 
-def generate_final_output(analysis_results: Dict, new_filename: str, original_filename: str) -> str:
-    """Generates a string with a format that is easy to copy and paste."""
-    title_and_use_case = generate_compact_title_and_use_case(analysis_results, original_filename)
-    keywords = generate_keywords(analysis_results, title_and_use_case, analysis_results.get("persuasive_description", ""))
+def generate_final_output(analysis_results: Dict, original_filename: str, category: str = "", releases: str = "") -> Dict:
+    """Generates a dictionary with a format suitable for Adobe Stock CSV."""
+    suggested_title = analysis_results.get("suggested_title", "")
+    persuasive_description = analysis_results.get("persuasive_description", "")
+    keywords = generate_keywords(analysis_results, suggested_title + " " + persuasive_description, persuasive_description)
 
-    output_str = f"""*   **Título + Caso de Uso:** {title_and_use_case}
-*   **Keywords:** {", ".join(keywords)}"""
-    return output_str
+    max_title_length = 200
+    combined_title_parts = [suggested_title]
 
-def process_image(image_path: str) -> Dict:
+    # Calculate the remaining space for the description
+    remaining_length = max_title_length - len(suggested_title)
+
+    if remaining_length > 0:
+        # Try to add the first significant words of the description
+        description_words = persuasive_description.split()
+        added_description = ""
+        for word in description_words:
+            if len(combined_title_parts[0]) + len(added_description) + len(word) + 1 <= max_title_length:
+                added_description += (" " + word)
+            else:
+                break
+        if added_description:
+            combined_title_parts.append(added_description.strip())
+
+    combined_title = " ".join(combined_title_parts).strip()
+
+    return {
+        "Filename": original_filename,
+        "Title": combined_title,
+        "Keywords": ", ".join(keywords),
+        "Category": category,
+        "Releases": releases,
+    }
+
+def process_image(image_path: str, category: str = "", releases: str = "") -> Dict:
     """Processes a single image file with robust error handling at all stages."""
     original_filename = os.path.basename(image_path)
     try:
         logging.info(f"Processing image: {image_path}")
         analysis_results = analyze_image_content_gemini(image_path)
 
-        main_title = generate_main_title(analysis_results)
-        title_variants = generate_title_variants(main_title, analysis_results)
-        detailed_description = generate_detailed_description(analysis_results)
-        new_filename = generate_new_filename(original_filename, analysis_results)
-        use_cases = suggest_use_cases(analysis_results)
-        target_audience = suggest_target_audience(analysis_results)
-        final_output = generate_final_output(analysis_results, new_filename, original_filename)
-        return {
-            "original_filename": original_filename,
-            "new_filename": new_filename,
-            "main_title": main_title,
-            "title_variants": ", ".join(title_variants),
-            "detailed_description": detailed_description,
-            "suggested_use_cases": ", ".join(use_cases),
-            "suggested_target_audience": ", ".join(target_audience),
-            "gemini_analysis": analysis_results,
-             "output_string": final_output,
-            "error": ""
-        }
+        final_output = generate_final_output(analysis_results, original_filename, category, releases)
+
+        return final_output
 
     except Exception as e:
         logging.error(f"Critical error processing image {image_path}: {e}")
@@ -414,30 +483,25 @@ def process_image(image_path: str) -> Dict:
 
         # Generate default metadata
         default_title = "Unprocessed Image"
-        default_description = "Error during processing. Please check the logs for details."
-        default_filename = f"Error_{os.path.splitext(original_filename)[0]}.{extension}"
-        default_output = f"""*   **Título + Caso de Uso:** {default_title}
-*   **Keywords:**  """
-
-        return {
-            "original_filename": original_filename,
-            "new_filename": default_filename,
-            "main_title": default_title,
-            "title_variants": "",
-            "detailed_description": default_description,
-            "suggested_use_cases": "",
-            "suggested_target_audience": "",
-            "gemini_analysis": {},
-             "output_string": default_output,
-            "error": f"Error during processing: {e}"
+        default_output = {
+            "Filename": original_filename,
+            "Title":  default_title,
+            "Keywords": "",
+            "Category": "",
+            "Releases": ""
         }
+        return default_output
 
 def main():
     parser = argparse.ArgumentParser(description="Automates image tagging and renaming for Adobe Stock.")
     parser.add_argument("directory", help="Path to the directory to process.")
+    parser.add_argument("-c", "--category", help="Category number for Adobe Stock.", default="")
+    parser.add_argument("-r", "--releases", help="Comma-separated list of release names.", default="")
     args = parser.parse_args()
 
     directory_path = args.directory
+    category = args.category
+    releases = args.releases
     processed_data = []
 
     if not os.path.isdir(directory_path):
@@ -451,43 +515,20 @@ def main():
         for filename in files:
             if filename.lower().endswith(image_extensions):
                 image_path = os.path.join(root, filename)
-                result = process_image(image_path)
+                result = process_image(image_path, category, releases)
                 processed_data.append(result)
 
-                if "new_filename" in result and not result.get("error"):
-                    old_filepath = os.path.join(root, result["original_filename"])
-                    new_filepath = os.path.join(root, result["new_filename"])
-                    try:
-                        if old_filepath != new_filepath:
-                            os.rename(old_filepath, new_filepath)
-                            logging.info(f"Renamed '{os.path.basename(old_filepath)}' to '{result['new_filename']}'")
-                    except OSError as e:
-                        logging.error(f"Error renaming file '{os.path.basename(old_filepath)}': {e}")
-                        result["error"] = f"Error renaming the file: {e}"
-                elif "new_filename" in result and result.get("error"):
-                    # Rename files that failed processing with a cleaned-up filename
-                    old_filepath = os.path.join(root, result["original_filename"])
-                    new_filename = generate_new_filename(result["original_filename"], {})  # Generate a clean default filename
-                    new_filepath = os.path.join(root, new_filename)
-                    try:
-                        if old_filepath != new_filepath:
-                            os.rename(old_filepath, new_filepath)
-                            logging.info(f"Renamed (Error) '{os.path.basename(old_filepath)}' to '{new_filename}'")
-                    except OSError as e:
-                        logging.error(f"Error renaming file (Error) '{os.path.basename(old_filepath)}': {e}")
-
-    # Generate log file
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    log_filename = f"image_processing_report_{timestamp}.csv"
+    # Generate log file with required name format
+    timestamp = datetime.now().strftime("%Y_%m_%d")  # Date format as YYYY_MM_DD
+    csv_filename = f"XXXXXXX{timestamp}.csv"  # Replace "XXXXXXX" with your name
     try:
-        with open(log_filename, 'w', newline='', encoding='utf-8') as csvfile:
-            fieldnames = ["original_filename", "new_filename", "main_title", "title_variants", "detailed_description",
-                          "suggested_use_cases", "suggested_target_audience", "gemini_analysis", "error", "output_string"]
-            writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
+            fieldnames = ["Filename", "Title", "Keywords", "Category", "Releases"]
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, quoting=csv.QUOTE_MINIMAL)
             writer.writeheader()
             for data in processed_data:
                 writer.writerow(data)
-        print(f"Processing report saved to '{log_filename}'")
+        print(f"Processing report saved to '{csv_filename}'")
     except Exception as e:
         logging.error(f"Error saving the report: {e}")
         print(f"Error saving the report: {e}")
