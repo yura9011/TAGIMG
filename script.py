@@ -53,20 +53,50 @@ def analyze_image_content_gemini(image_path: str, max_retries: int = MAX_RETRIES
                     "mime_type": "image/png" if image_path.lower().endswith(".png") else "image/jpeg",
                     "data": image_data
                 },
-                """Suggest a short, effective sales title for this image in English. Provide a basic description of the image. Describe the image for a client, highlighting its benefits and potential uses in English. List the key artistic styles and the most impactful distinctive elements of the image in English. Provide the response strictly in JSON format.
+"""
+                Analyze the image and provide the following information in JSON format, specifically tailored for listing on Adobe Stock to maximize sales and visibility.  Focus on providing high-quality, relevant information that would be valuable to potential buyers.  **Consider the "7 Ws" (Who, What, Where, When, Why, How, Mood) to make your descriptions and title more comprehensive.**
 
-                Expected JSON Format:
+                **Instructions:**
+
+                1. **Suggest a Short, Effective Sales Title (Max 7 words):**  Create a concise and compelling title that will grab a buyer's attention and clearly describe the image's main subject.  Think like a buyer searching for images on Adobe Stock.  Incorporate relevant keywords naturally. Avoid generic titles. **Address the "7 Ws" where possible (Who, What, Where, When, Mood, Concept).**
+
+                2. **Provide a Basic Description:**  Offer a straightforward, factual description of the image's visual content. **Incorporate "7 Ws" details.**
+
+                3. **Write a Persuasive Description for Clients (Max 150 characters):**  Describe the image in a way that highlights its benefits and potential uses for clients. Imagine how a buyer might use this image for their projects.  Incorporate context and relevant keywords naturally.  Focus on being concise and persuasive. **Incorporate "7 Ws" details where relevant.**
+
+                4. **Suggest Descriptive Keywords (5-10 keywords):**  List keywords that literally describe the visual elements present in the image (e.g., objects, people, setting, colors).  Prioritize the most important and visually prominent elements. **Focus on keywords related to "7 Ws".**
+
+                5. **Suggest Conceptual Keywords (3-5 keywords):**  List keywords that represent the abstract or emotional associations evoked by the image (e.g., serenity, joy, adventure, success, creativity). **Consider "Mood" and "Concept" from "7 Ws".**
+
+                6. **Suggest Stylistic Keywords (3-5 keywords):**  List keywords that describe the artistic or technical style of the image (e.g., digital art, watercolor, black and white, panoramic, flat lay, HDR, illustration, painting).
+
+                7. **Suggest Seasonal Keywords (0-2 keywords, only if applicable):** If the image is clearly related to a specific season, holiday, or time of year, suggest relevant seasonal keywords (e.g., Christmas, Summer, Autumn, Back to School, Winter). If not applicable, leave this list empty.
+
+                **Important Considerations for all Keywords:**
+
+                * **Relevance:** Keywords must be highly relevant to the image content. Irrelevant keywords are detrimental.
+                * **Specificity:** Prefer specific keywords over general ones (e.g., "Golden Gate Bridge" instead of "Bridge").
+                * **Quality over Quantity:** Focus on providing a smaller set of highly relevant and effective keywords rather than filling up the keyword limit with less relevant terms.
+                * **Avoid Redundancy:** Do not repeat similar keywords or synonyms.
+
+                **JSON Output Format:**
+
+                Respond strictly in JSON format as follows:
+
+                ```json
                 {
-                  "suggested_title": "Short sales title",
-                  "basic_description": "A basic, plain description of the image",
-                  "persuasive_description": "Client-focused description highlighting benefits and uses",
-                  "key_styles": ["Style 1", "Style 2"],
-                  "distinctive_elements": ["Element 1", "Element 2"],
-                    "base_description": "A basic, plain description for fallback."
+                "suggested_title": "Concise and effective sales title (max 7 words)",
+                "basic_description": "A basic, factual description of the image",
+                "persuasive_description": "Client-focused description highlighting benefits and uses (max 250 characters)",
+                "descriptive_keywords": ["keyword1", "keyword2", "keyword3", ...],
+                "conceptual_keywords": ["keyword1", "keyword2", "keyword3", ...],
+                "stylistic_keywords": ["keyword1", "keyword2", "keyword3", ...],
+                "seasonal_keywords": ["keyword1", "keyword2", ...],
+                "base_description": "A basic, plain description for fallback."
                 }
 
-                If the image is abstract, describe the emotions and interpretations it may evoke.
-                """
+            If the image is abstract, describe the emotions and interpretations it may evoke.
+            """
             ]
 
             response = model.generate_content(contents)
@@ -150,26 +180,269 @@ DEFAULT_ABBREVIATIONS = {
     "stylized": "Styl",
     "detailed": "Deta",
     "evocative": "Evoc",
-    "striking": "Stri"
+    "striking": "Stri",
+    "minimalist": "Min",
+    "geometric": "Geom",
+    "organic": "Org",
+    "vibrant": "Vibr",
+    "dynamic": "Dyn",
+    "elegant": "Eleg",
+    "modern": "Mod",
+    "vintage": "Vint",
+    "rustic": "Rust",
+    "urban": "Urb",
+    "nature": "Nat",
+    "people": "Peop",
+    "animal": "Anim",
+    "object": "Obj",
+    "concept": "Conc",
+    "background": "Bkg",
+    "texture": "Text",
+    "pattern": "Patt",
+    "graphic": "Graph",
+    "design": "Des",
+    "template": "Temp",
+    "mockup": "Mock",
+    "print": "Prnt",
+    "website": "Web",
+    "banner": "Ban",
+    "poster": "Post",
+    "brochure": "Broch",
+    "flyer": "Fly",
+    "card": "Card",
+    "invitation": "Invit",
+    "branding": "Brand",
+    "identity": "Ident",
+    "corporate": "Corp",
+    "business": "Biz",
+    "professional": "Prof",
+    "clean": "Clean",
+    "simple": "Simp",
+    "complex": "Complx",
+    "bright": "Bright",
+    "dark": "Dark",
+    "colorful": "Color",
+    "monochrome": "Mono",
+    "grayscale": "Gray",
+    "sepia": "Sepia",
+    "warm": "Warm",
+    "cool": "Cool",
+    "summer": "Sum",
+    "winter": "Win",
+    "autumn": "Aut",
+    "spring": "Spr",
+    "night": "Night",
+    "day": "Day",
+    "sunrise": "Sunr",
+    "sunset": "Suns",
+    "indoors": "In",
+    "outdoors": "Out",
+    "close-up": "Close",
+    "macro": "Mac",
+    "wide": "Wide",
+    "aerial": "Aer",
+    "lifestyle": "Life",
+    "travel": "Trav",
+    "food": "Food",
+    "fashion": "Fash",
+    "beauty": "Beaut",
+    "health": "Health",
+    "technology": "Tech",
+    "education": "Educ",
+    "science": "Sci",
+    "finance": "Fin",
+    "real estate": "RE",
+    "event": "Evnt",
+    "holiday": "Holi",
+    "celebration": "Celebr",
+    "music": "Music",
+    "sport": "Sport",
+    "game": "Game",
+    "religion": "Relig",
+    "culture": "Cult",
+    "history": "Hist",
+    "family": "Fam",
+    "friendship": "Friend",
+    "love": "Love",
+    "happy": "Hap",
+    "sad": "Sad",
+    "angry": "Angry",
+    "calm": "Calm",
+    "excited": "Excit",
+    "serious": "Ser",
+    "playful": "Play",
+    "powerful": "Pow",
+    "gentle": "Gent",
+    "dynamic": "Dyn",
+    "static": "Stat",
+    "isolated": "Isol",
+    "group": "Group",
+    "single": "Sing",
+    "multiple": "Mult",
+    "front": "Front",
+    "back": "Back",
+    "side": "Side",
+    "top": "Top",
+    "bottom": "Bot",
+    "view": "View",
+    "shot": "Shot",
+    "composition": "Comp",
+    "depth": "Depth",
+    "focus": "Foc",
+    "light": "Light",
+    "shadow": "Shad",
+    "tone": "Tone",
+    "color": "Col",
+    "shape": "Shape",
+    "form": "Form",
+    "line": "Line",
+    "space": "Space",
+    "balance": "Bal",
+    "harmony": "Harm",
+    "contrast": "Contr",
+    "unity": "Unity",
+    "rhythm": "Rhythm",
+    "emphasis": "Emph",
+    "pattern": "Patt",
+    "texture": "Text",
+    "surface": "Surf",
+    "material": "Mat",
+    "element": "Elem",
+    "detail": "Det",
+    "structure": "Struct",
+    "process": "Proc",
+    "concept": "Conc",
+    "idea": "Idea",
+    "symbol": "Symb",
+    "metaphor": "Metaph",
+    "emotion": "Emo",
+    "feeling": "Feel",
+    "mood": "Mood",
+    "atmosphere": "Atm",
+    "story": "Story",
+    "narrative": "Narr",
+    "message": "Msg",
+    "meaning": "Mean",
+    "purpose": "Purp",
+    "function": "Func",
+    "use": "Use",
+    "application": "Appl",
+    "solution": "Sol",
+    "benefit": "Ben",
+    "advantage": "Adv",
+    "value": "Val",
+    "quality": "Qual",
+    "style": "Style",
+    "technique": "Techn",
+    "medium": "Med",
+    "genre": "Genre",
+    "category": "Cat",
+    "type": "Type",
+    "kind": "Kind"
 }
 
 SYNONYMS = {
-    "helmet": ["headgear", "casque", "helm", "yelmo"],
-    "mask": ["face covering", "disguise", "visage", "máscara"],
-    "eyes": ["optics", "orbs", "peepers", "ojos"],
-    "horns": ["antlers", "protrusions", "spikes", "cuernos"],
-    "illustration": ["artwork", "drawing", "depiction", "ilustración"],
-    "knight": ["warrior", "cavalier", "caballero"],
-    "portrait": ["image", "likeness", "representation", "retrato"],
-    "landscape": ["scenery", "view", "vista", "paisaje"],
-    "design": ["composition", "layout", "arte", "diseño"],
-    "abstract": ["non-representational", "conceptual", "simbólico", "abstracto"],
-    "unique": ["original", "distinctive", "singular", "exclusivo"],
-    "original": ["unique", "novel", "fresh", "auténtico"],
-    "impactful": ["striking", "powerful", "impressive", "conmovedor"],
-    "eye-catching": ["arresting", "noticeable", "standout", "llamativo"],
-    "exclusive": ["limited", "rare", "one-of-a-kind", "exclusivo"]
+    "helmet": ["headgear", "casque", "helm", "protective headwear"],
+    "mask": ["face covering", "disguise", "visage", "facial mask", "face mask"],
+    "eyes": ["optics", "orbs", "peepers", "visual organs", "sight organs"],
+    "horns": ["antlers", "protrusions", "spikes", "pointed growths", "horn-like structures"],
+    "illustration": ["artwork", "drawing", "depiction", "graphic art", "pictorial representation"],
+    "knight": ["warrior", "cavalier", "mounted soldier", "armored fighter"],
+    "portrait": ["image", "likeness", "representation", "figure", "depiction of a person"],
+    "landscape": ["scenery", "view", "vista", "natural vista", "geographic view"],
+    "design": ["composition", "layout", "art", "arrangement", "visual plan"],
+    "abstract": ["non-representational", "conceptual", "symbolic", "non-figurative", "unrealistic"],
+    "unique": ["original", "distinctive", "singular", "exclusive", "uncommon", "rare"],
+    "original": ["unique", "novel", "fresh", "authentic", "new", "innovative"],
+    "impactful": ["striking", "powerful", "impressive", "moving", "forceful", "effective"],
+    "eye-catching": ["arresting", "noticeable", "standout", "attention-grabbing", "striking", "conspicuous"],
+    "exclusive": ["limited", "rare", "one-of-a-kind", "uncommon", "restricted", "private"],
+    "serenity": ["calmness", "peacefulness", "tranquility", "peace", "stillness", "quietude"],
+    "adventure": ["exploration", "journey", "expedition", "quest", "thrill", "excitement"],
+    "romance": ["affection", "love", "intimacy", "passion", "courtship", "tenderness"],
+    "success": ["achievement", "triumph", "victory", "accomplishment", "prosperity", "fulfillment"],
+    "mountain": ["peak", "mount", "summit", "highland", "upland"],
+    "lake": ["pond", "reservoir", "pool", "body of water", "inland sea"],
+    "sunset": ["sundown", "dusk", "evening", "twilight", "setting sun"],
+    "water": ["liquid", "H2O", "aqua", "fluid", "beverage"],
+    "sky": ["heavens", "firmament", "atmosphere", "airspace", "upper atmosphere"],
+    "trees": ["woods", "forest", "grove", "woodland", "timber"],
+    "reflection": ["mirror image", "image", "replication", "duplication", "reproduction"],
+    "orange sky": ["fiery sky", "amber sky", "sunset sky", "colorful sky", "vibrant sky"],
+    "calmness": ["serenity", "tranquility", "peace", "stillness", "quiet"],
+    "peacefulness": ["serenity", "calmness", "tranquility", "quietude", "harmony"],
+    "tranquility": ["serenity", "calmness", "peacefulness", "repose", "placidity"],
+    "peace": ["serenity", "tranquility", "calmness", "harmony", "restfulness"],
+    "stillness": ["quietness", "silence", "hush", "motionlessness", "immobility"],
+    "quietude": ["quietness", "tranquility", "serenity", "peace", "calm"],
+    "exploration": ["adventure", "discovery", "investigation", "voyage", "travel"],
+    "journey": ["trip", "voyage", "travel", "adventure", "excursion"],
+    "expedition": ["journey", "adventure", "voyage", "exploration", "mission"],
+    "quest": ["adventure", "mission", "search", "pursuit", "endeavor"],
+    "thrill": ["excitement", "adventure", "rush", "kick", "stimulation"],
+    "excitement": ["thrill", "adventure", "enthusiasm", "agitation", "arousal"],
+    "affection": ["love", "romance", "tenderness", "fondness", "warmth"],
+    "love": ["affection", "romance", "passion", "devotion", "adoration"],
+    "intimacy": ["closeness", "affection", "familiarity", "nearness", "warmth"],
+    "passion": ["love", "romance", "ardor", "zeal", "fervor"],
+    "courtship": ["romance", "dating", "engagement", "wooing", "suing"],
+    "tenderness": ["affection", "gentleness", "kindness", "warmth", "softness"],
+    "achievement": ["success", "accomplishment", "attainment", "realization", "feat"],
+    "triumph": ["victory", "success", "conquest", "mastery", "win"],
+    "victory": ["triumph", "win", "success", "conquest", "defeat of opponent"],
+    "accomplishment": ["achievement", "success", "feat", "realization", "fulfillment"],
+    "prosperity": ["wealth", "affluence", "riches", "fortune", "success"],
+    "fulfillment": ["satisfaction", "achievement", "success", "contentment", "gratification"],
+    "peak": ["mountain", "summit", "mountaintop", "height", "apex"],
+    "mount": ["mountain", "peak", "rise", "hill", "elevation"],
+    "summit": ["peak", "top", "apex", "crest", "highest point"],
+    "highland": ["mountainous region", "upland", "elevated land", "mountain area", "high country"],
+    "upland": ["highland", "elevated region", "plateau", "high ground", "hill country"],
+    "pond": ["small lake", "pool", "waterhole", "basin", "still water"],
+    "reservoir": ["artificial lake", "water storage", "basin", "tank", "water supply"],
+    "pool": ["pond", "puddle", "watering hole", "basin", "small body of water"],
+    "body of water": ["lake", "river", "sea", "ocean", "stream"],
+    "inland sea": ["large lake", "landlocked sea", "salt lake", "great lake", "large body of water"],
+    "sundown": ["sunset", "dusk", "evening", "twilight", "nightfall"],
+    "dusk": ["sunset", "twilight", "evening", "sundown", "gloaming"],
+    "evening": ["dusk", "nightfall", "sunset", "twilight", "late day"],
+    "twilight": ["dusk", "sunset", "evening", "gloaming", "crepuscule"],
+    "setting sun": ["sunset", "sundown", "evening sun", "sun going down", "sun dipping below horizon"],
+    "liquid": ["water", "fluid", "beverage", "solution", "potion"],
+    "aqua": ["water", "light blue", "cyan", "turquoise", "watery color"],
+    "fluid": ["liquid", "water", "flowing substance", "liquid matter", "molten"],
+    "beverage": ["drink", "liquid", "refreshment", "potion", "libation"],
+    "heavens": ["sky", "firmament", "celestial sphere", "upper atmosphere", "air"],
+    "firmament": ["sky", "heavens", "vault of heaven", "expanse of sky", "atmosphere"],
+    "atmosphere": ["sky", "air", "airspace", "gases surrounding earth", "ambient air"],
+    "airspace": ["sky", "air", "upper atmosphere", "flight space", "air lanes"],
+    "upper atmosphere": ["sky", "stratosphere", "ionosphere", "exosphere", "outer air"],
+    "woods": ["forest", "trees", "woodland", "grove", "copse"],
+    "forest": ["woods", "woodland", "trees", "jungle", "rainforest"],
+    "grove": ["small forest", "orchard", "copse", "thicket", "woodlot"],
+    "woodland": ["forest", "woods", "grove", "copse", "forested area"],
+    "timber": ["wood", "lumber", "logs", "wood for building", "forest resources"],
+    "mirror image": ["reflection", "duplicate", "reversal", "copy", "echo"],
+    "duplicate": ["copy", "replica", "reproduction", "clone", "mirror image"],
+    "reversal": ["opposite", "inverse", "contrary", "backward", "mirror image"],
+    "copy": ["duplicate", "replica", "reproduction", "imitation", "clone"],
+    "echo": ["reverberation", "reflection", "resonation", "repeat", "mirror image"],
+    "fiery sky": ["orange sky", "red sky", "vibrant sky", "colorful sky", "dramatic sky"],
+    "amber sky": ["orange sky", "yellow-orange sky", "golden sky", "warm sky", "sunset sky"],
+    "sunset sky": ["evening sky", "twilight sky", "dusk sky", "sky at sunset", "sky during sundown"],
+    "colorful sky": ["vibrant sky", "multicolored sky", "rainbow sky", "bright sky", "sky with many colors"],
+    "vibrant sky": ["colorful sky", "bright sky", "intense sky", "lively sky", "dynamic sky"],
+    "attention-grabbing": ["eye-catching", "striking", "noticeable", "arresting", "prominent"],
+    "attention-getting": ["eye-catching", "noticeable", "striking", "arresting", "prominent"],
+    "noticeable": ["eye-catching", "visible", "perceptible", "observable", "evident"],
+    "arresting": ["eye-catching", "striking", "captivating", "compelling", "fascinating"],
+    "standout": ["eye-catching", "prominent", "remarkable", "distinctive", "conspicuous"],
+    "prominent": ["standout", "noticeable", "conspicuous", "obvious", "remarkable"],
+    "remarkable": ["notable", "outstanding", "exceptional", "striking", "standout"],
+    "distinctive": ["unique", "characteristic", "peculiar", "special", "standout"],
+    "conspicuous": ["noticeable", "obvious", "evident", "prominent", "standout"]
 }
+
 def generate_default_main_title(filename: str) -> str:
     """Generates a default main title using information from the filename."""
     name_part = os.path.splitext(filename)[0].replace("_", " ").capitalize()
@@ -307,8 +580,25 @@ def generate_detailed_description(filename: str, analysis_results: Dict) -> str:
         "Perfect for your next creative project.",
         "Ideal for capturing the attention of your audience.",
         "Elevate your content with this impactful visual.",
-        "Use it to make a statement."
+        "Use it to make a statement.",
+        "Enhance your project with this striking image.",
+        "Make your message unforgettable with this visual asset.",
+        "Grab attention and make an impact.",
+        "Bring your vision to life with this compelling artwork.",
+        "A valuable addition to any creative toolkit.",
+        "Unlock your project's potential with this image.",
+        "Drive engagement with this captivating visual.",
+        "Transform your content with this high-quality image.",
+        "Add a professional touch to your designs.",
+        "Stand out from the crowd with this unique visual.",
+        "Create visually stunning projects effortlessly.",
+        "Inspire your audience with this remarkable image.",
+        "Boost your brand with this powerful visual.",
+        "Get your message across effectively.",
+        "Make a lasting impression with this image.",
+        "The perfect visual solution for your needs."
     ]
+    
     import random
     description_parts.append(random.choice(call_to_action))
     return " ".join(description_parts)[:250].strip()
@@ -360,6 +650,7 @@ def suggest_use_cases(analysis_results: Dict, title: str, description: str) -> L
         return [DEFAULT_ABBREVIATIONS.get(use, use) for use in use_cases][:3]
     else:
         return ["Image"]
+    
 def suggest_target_audience(analysis_results: Dict, title: str, description: str) -> List[str]:
     """Suggests target audience based on the analysis results, title and description"""
     keywords = set()
@@ -436,26 +727,49 @@ def generate_final_output(analysis_results: Dict, original_filename: str, catego
     suggested_title = analysis_results.get("suggested_title", "")
     persuasive_description = analysis_results.get("persuasive_description", "")
     keywords = generate_keywords(analysis_results, suggested_title + " " + persuasive_description, persuasive_description)
+    use_cases = suggest_use_cases(analysis_results, suggested_title, persuasive_description) # CALL suggest_use_cases
 
     max_title_length = 200
-    combined_title_parts = [suggested_title]
+    combined_title_parts = []
 
-    # Calculate the remaining space for the description
-    remaining_length = max_title_length - len(suggested_title)
+    # Start with "Generative AI" at the beginning
+    combined_title_parts = ["Generative AI"]
 
+    # Add the suggested title if available
+    if suggested_title:
+        combined_title_parts.append(suggested_title)
+
+    # Calculate the remaining space for the description (after "Generative AI" and suggested title)
+    current_title_length = len(" ".join(combined_title_parts).strip())  # Calculate length so far
+    remaining_length = max_title_length - current_title_length
+
+    max_description_words_to_add = 9  # Limit description words to add
+    description_words_added_count = 0
     if remaining_length > 0:
         # Try to add the first significant words of the description
         description_words = persuasive_description.split()
         added_description = ""
         for word in description_words:
-            if len(combined_title_parts[0]) + len(added_description) + len(word) + 1 <= max_title_length:
-                added_description += (" " + word)
+            if description_words_added_count < max_description_words_to_add: # Check word count limit
+                if current_title_length + len(added_description) + len(word) + 1 <= max_title_length:  # Check against updated current_title_length
+                    added_description += (" " + word)
+                    description_words_added_count += 1 # Increment counter
+                else:
+                    break  # Stop adding description words if title is too long
             else:
-                break
+                break # Stop adding description words if word limit reached
         if added_description:
             combined_title_parts.append(added_description.strip())
 
     combined_title = " ".join(combined_title_parts).strip()
+
+    # Truncate the entire title if it's still too long (unlikely now with word limit, but as a safety)
+    if len(combined_title) > max_title_length:
+        print(f"Title length before truncation: {len(combined_title)}")
+        combined_title = combined_title[:max_title_length].rsplit(' ', 1)[0]
+        print(f"Title truncated, new length: {len(combined_title)}, combined_title = '{combined_title}'")
+    else:
+        print("Title length is within limit, no truncation needed.")
 
     return {
         "Filename": original_filename,
@@ -463,8 +777,9 @@ def generate_final_output(analysis_results: Dict, original_filename: str, catego
         "Keywords": ", ".join(keywords),
         "Category": category,
         "Releases": releases,
+        "Use Cases": ", ".join(use_cases) # ADD "Use Cases" to the dictionary
     }
-
+    
 def process_image(image_path: str, category: str = "", releases: str = "") -> Dict:
     """Processes a single image file with robust error handling at all stages."""
     original_filename = os.path.basename(image_path)
@@ -520,10 +835,11 @@ def main():
 
     # Generate log file with required name format
     timestamp = datetime.now().strftime("%Y_%m_%d")  # Date format as YYYY_MM_DD
-    csv_filename = f"XXXXXXX{timestamp}.csv"  # Replace "XXXXXXX" with your name
+    csv_filename = f"xxxxxx{timestamp}.csv"  # Replace "xxxxxxx" with your name
     try:
         with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
-            fieldnames = ["Filename", "Title", "Keywords", "Category", "Releases"]
+            # ADD "Use Cases" to fieldnames
+            fieldnames = ["Filename", "Title", "Keywords", "Category", "Releases", "Use Cases"]
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames, quoting=csv.QUOTE_MINIMAL)
             writer.writeheader()
             for data in processed_data:
