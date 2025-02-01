@@ -1,0 +1,849 @@
+api:
+  key_env_variable: GOOGLE_API_KEY
+  model_name: gemini-2.0-flash-exp
+  max_retries: 5
+  initial_delay: 1
+  delay_between_requests: 1
+
+adobe_stock:
+  max_title_length: 190
+  max_persuasive_description_length: 250
+  max_filename_length: 200
+  title_prefix: "Generative AI"
+  default_category: ""
+  default_releases: ""
+
+prompt:
+  max_title_words: 7
+
+logging:
+  filename: image_processing.log
+  level: INFO
+
+abbreviations:
+  abstract: Abstr
+  illustration: Illust
+  painting: Paint
+  digital: Dig
+  art: Art
+  commercial: Com
+  advertising: Adv
+  marketing: Mkt
+  editorial: Edit
+  social media: Social
+  web design: Web
+  creative: Cre
+  artists: Art
+  designers: Des
+  marketers: Mkt
+  editors: Edit
+  content creators: Cont
+  small business: SmallBiz
+  image: Img
+  fantasy: Fant
+  realistic: Real
+  portrait: Port
+  landscape: Land
+  unique: Uniq
+  original: Orig
+  impactful: Imp
+  eye-catching: Eye
+  exclusive: Excl
+  menacing: Menac
+  heroic: Hero
+  stylized: Styl
+  detailed: Deta
+  evocative: Evoc
+  striking: Stri
+  minimalist: Min
+  geometric: Geom
+  organic: Org
+  vibrant: Vibr
+  dynamic: Dyn
+  elegant: Eleg
+  modern: Mod
+  vintage: Vint
+  rustic: Rust
+  urban: Urb
+  nature: Nat
+  people: Peop
+  animal: Anim
+  object: Obj
+  concept: Conc
+  background: Bkg
+  texture: Text
+  pattern: Patt
+  graphic: Graph
+  design: Des
+  template: Temp
+  mockup: Mock
+  print: Prnt
+  website: Web
+  banner: Ban
+  poster: Post
+  brochure: Broch
+  flyer: Fly
+  card: Card
+  invitation: Invit
+  branding: Brand
+  identity: Ident
+  corporate: Corp
+  business: Biz
+  professional: Prof
+  clean: Clean
+  simple: Simp
+  complex: Complx
+  bright: Bright
+  dark: Dark
+  colorful: Color
+  monochrome: Mono
+  grayscale: Gray
+  sepia: Sepia
+  warm: Warm
+  cool: Cool
+  summer: Sum
+  winter: Win
+  autumn: Aut
+  spring: Spr
+  night: Night
+  day: Day
+  sunrise: Sunr
+  sunset: Suns
+  indoors: In
+  outdoors: Out
+  close-up: Close
+  macro: Mac
+  wide: Wide
+  aerial: Aer
+  lifestyle: Life
+  travel: Trav
+  food: Food
+  fashion: Fash
+  beauty: Beaut
+  health: Health
+  technology: Tech
+  education: Educ
+  science: Sci
+  finance: Fin
+  real estate: RE
+  event: Evnt
+  holiday: Holi
+  celebration: Celebr
+  music: Music
+  sport: Sport
+  game: Game
+  religion: Relig
+  culture: Cult
+  history: Hist
+  family: Fam
+  friendship: Friend
+  love: Love
+  happy: Hap
+  sad: Sad
+  angry: Angry
+  calm: Calm
+  excited: Excit
+  serious: Ser
+  playful: Play
+  powerful: Pow
+  gentle: Gent
+  dynamic: Dyn
+  static: Stat
+  isolated: Isol
+  group: Group
+  single: Sing
+  multiple: Mult
+  front: Front
+  back: Back
+  side: Side
+  top: Top
+  bottom: Bot
+  view: View
+  shot: Shot
+  composition: Comp
+  depth: Depth
+  focus: Foc
+  light: Light
+  shadow: Shad
+  tone: Tone
+  color: Col
+  shape: Shape
+  form: Form
+  line: Line
+  space: Space
+  balance: Bal
+  harmony: Harm
+  contrast: Contr
+  unity: Unity
+  rhythm: Rhythm
+  emphasis: Emph
+  pattern: Patt
+  texture: Text
+  surface: Surf
+  material: Mat
+  element: Elem
+  detail: Det
+  structure: Struct
+  process: Proc
+  concept: Conc
+  idea: Idea
+  symbol: Symb
+  metaphor: Metaph
+  emotion: Emo
+  feeling: Feel
+  mood: Mood
+  atmosphere: Atm
+  story: Story
+  narrative: Narr
+  message: Msg
+  meaning: Mean
+  purpose: Purp
+  function: Func
+  use: Use
+  application: Appl
+  solution: Sol
+  benefit: Ben
+  advantage: Adv
+  value: Val
+  quality: Qual
+  style: Style
+  technique: Techn
+  medium: Med
+  genre: Genre
+  category: Cat
+  type: Type
+  kind: Kind
+
+synonyms:
+  helmet:
+    - headgear
+    - casque
+    - helm
+    - protective headwear
+  mask:
+    - face covering
+    - disguise
+    - visage
+    - facial mask
+    - face mask
+  eyes:
+    - optics
+    - orbs
+    - peepers
+    - visual organs
+    - sight organs
+  horns:
+    - antlers
+    - protrusions
+    - spikes
+    - pointed growths
+    - horn-like structures
+  illustration:
+    - artwork
+    - drawing
+    - depiction
+    - graphic art
+    - pictorial representation
+  knight:
+    - warrior
+    - cavalier
+    - mounted soldier
+    - armored fighter
+  portrait:
+    - image
+    - likeness
+    - representation
+    - figure
+    - depiction of a person
+  landscape:
+    - scenery
+    - view
+    - vista
+    - natural vista
+    - geographic view
+  design:
+    - composition
+    - layout
+    - art
+    - arrangement
+    - visual plan
+  abstract:
+    - non-representational
+    - conceptual
+    - symbolic
+    - non-figurative
+    - unrealistic
+  unique:
+    - original
+    - distinctive
+    - singular
+    - exclusive
+    - uncommon
+    - rare
+  original:
+    - unique
+    - novel
+    - fresh
+    - authentic
+    - new
+    - innovative
+  impactful:
+    - striking
+    - powerful
+    - impressive
+    - moving
+    - forceful
+    - effective
+  eye-catching:
+    - arresting
+    - noticeable
+    - standout
+    - attention-grabbing
+    - striking
+    - conspicuous
+  exclusive:
+    - limited
+    - rare
+    - one-of-a-kind
+    - uncommon
+    - restricted
+    - private
+  serenity:
+    - calmness
+    - peacefulness
+    - tranquility
+    - peace
+    - stillness
+    - quietude
+  adventure:
+    - exploration
+    - journey
+    - expedition
+    - quest
+    - thrill
+    - excitement
+  romance:
+    - affection
+    - love
+    - intimacy
+    - passion
+    - courtship
+    - tenderness
+  success:
+    - achievement
+    - triumph
+    - victory
+    - accomplishment
+    - prosperity
+    - fulfillment
+  mountain:
+    - peak
+    - mount
+    - summit
+    - highland
+    - upland
+  lake:
+    - pond
+    - reservoir
+    - pool
+    - body of water
+    - inland sea
+  sunset:
+    - sundown
+    - dusk
+    - evening
+    - twilight
+    - setting sun
+  water:
+    - liquid
+    - H2O
+    - aqua
+    - fluid
+    - beverage
+  sky:
+    - heavens
+    - firmament
+    - atmosphere
+    - airspace
+    - upper atmosphere
+  trees:
+    - woods
+    - forest
+    - grove
+    - woodland
+    - timber
+  reflection:
+    - mirror image
+    - image
+    - replication
+    - duplication
+    - reproduction
+  orange sky:
+    - fiery sky
+    - amber sky
+    - sunset sky
+    - colorful sky
+    - vibrant sky
+  calmness:
+    - serenity
+    - tranquility
+    - peace
+    - stillness
+    - quiet
+  peacefulness:
+    - serenity
+    - calmness
+    - tranquility
+    - quietude
+    - harmony
+  tranquility:
+    - serenity
+    - calmness
+    - peacefulness
+    - repose
+    - placidity
+  peace:
+    - serenity
+    - tranquility
+    - calmness
+    - harmony
+    - restfulness
+  stillness:
+    - quietness
+    - silence
+    - hush
+    - motionlessness
+    - immobility
+  quietude:
+    - quietness
+    - tranquility
+    - serenity
+    - peace
+    - calm
+  exploration:
+    - adventure
+    - discovery
+    - investigation
+    - voyage
+    - travel
+  journey:
+    - trip
+    - voyage
+    - travel
+    - adventure
+    - excursion
+  expedition:
+    - journey
+    - adventure
+    - voyage
+    - exploration
+    - mission
+  quest:
+    - adventure
+    - mission
+    - search
+    - pursuit
+    - endeavor
+  thrill:
+    - excitement
+    - adventure
+    - rush
+    - kick
+    - stimulation
+  excitement:
+    - thrill
+    - adventure
+    - enthusiasm
+    - agitation
+    - arousal
+  affection:
+    - love
+    - romance
+    - tenderness
+    - fondness
+    - warmth
+  love:
+    - affection
+    - romance
+    - passion
+    - devotion
+    - adoration
+  intimacy:
+    - closeness
+    - affection
+    - familiarity
+    - nearness
+    - warmth
+  passion:
+    - love
+    - romance
+    - ardor
+    - zeal
+    - fervor
+  courtship:
+    - romance
+    - dating
+    - engagement
+    - wooing
+    - suing
+  tenderness:
+    - affection
+    - gentleness
+    - kindness
+    - warmth
+    - softness
+  achievement:
+    - success
+    - accomplishment
+    - attainment
+    - realization
+    - feat
+  triumph:
+    - victory
+    - success
+    - conquest
+    - mastery
+    - win
+  victory:
+    - triumph
+    - win
+    - success
+    - conquest
+    - defeat of opponent
+  accomplishment:
+    - achievement
+    - success
+    - feat
+    - realization
+    - fulfillment
+  prosperity:
+    - wealth
+    - affluence
+    - riches
+    - fortune
+    - success
+  fulfillment:
+    - satisfaction
+    - achievement
+    - success
+    - contentment
+    - gratification
+  peak:
+    - mountain
+    - summit
+    - mountaintop
+    - height
+    - apex
+  mount:
+    - mountain
+    - peak
+    - rise
+    - hill
+    - elevation
+  summit:
+    - peak
+    - top
+    - apex
+    - crest
+    - highest point
+  highland:
+    - mountainous region
+    - upland
+    - elevated land
+    - mountain area
+    - high country
+  upland:
+    - highland
+    - elevated region
+    - plateau
+    - high ground
+    - hill country
+  pond:
+    - small lake
+    - pool
+    - waterhole
+    - basin
+    - still water
+  reservoir:
+    - artificial lake
+    - water storage
+    - basin
+    - tank
+    - water supply
+  pool:
+    - pond
+    - puddle
+    - watering hole
+    - basin
+    - small body of water
+  body of water:
+    - lake
+    - river
+    - sea
+    - ocean
+    - stream
+  inland sea:
+    - large lake
+    - landlocked sea
+    - salt lake
+    - great lake
+    - large body of water
+  sundown:
+    - sunset
+    - dusk
+    - evening
+    - twilight
+    - nightfall
+  dusk:
+    - sunset
+    - twilight
+    - evening
+    - sundown
+    - gloaming
+  evening:
+    - dusk
+    - nightfall
+    - sunset
+    - twilight
+    - late day
+  twilight:
+    - dusk
+    - sunset
+    - evening
+    - gloaming
+    - crepuscule
+  setting sun:
+    - sunset
+    - sundown
+    - evening sun
+    - sun going down
+    - sun dipping below horizon
+  liquid:
+    - water
+    - fluid
+    - beverage
+    - solution
+    - potion
+  aqua:
+    - water
+    - light blue
+    - cyan
+    - turquoise
+    - watery color
+  fluid:
+    - liquid
+    - water
+    - flowing substance
+    - liquid matter
+    - molten
+  beverage:
+    - drink
+    - liquid
+    - refreshment
+    - potion
+    - libation
+  heavens:
+    - sky
+    - firmament
+    - celestial sphere
+    - upper atmosphere
+    - air
+  firmament:
+    - sky
+    - heavens
+    - vault of heaven
+    - expanse of sky
+    - atmosphere
+  atmosphere:
+    - sky
+    - air
+    - airspace
+    - gases surrounding earth
+    - ambient air
+  airspace:
+    - sky
+    - air
+    - upper atmosphere
+    - flight space
+    - air lanes
+  upper atmosphere:
+    - sky
+    - stratosphere
+    - ionosphere
+    - exosphere
+    - outer air
+  woods:
+    - forest
+    - trees
+    - woodland
+    - grove
+    - copse
+  forest:
+    - woods
+    - woodland
+    - trees
+    - jungle
+    - rainforest
+  grove:
+    - small forest
+    - orchard
+    - copse
+    - thicket
+    - woodlot
+  woodland:
+    - forest
+    - woods
+    - grove
+    - copse
+    - forested area
+  timber:
+    - wood
+    - lumber
+    - logs
+    - wood for building
+    - forest resources
+  mirror image:
+    - reflection
+    - duplicate
+    - reversal
+    - copy
+    - echo
+  duplicate:
+    - copy
+    - replica
+    - reproduction
+    - clone
+    - mirror image
+  reversal:
+    - opposite
+    - inverse
+    - contrary
+    - backward
+    - mirror image
+  copy:
+    - duplicate
+    - replica
+    - reproduction
+    - imitation
+    - clone
+  echo:
+    - reverberation
+    - reflection
+    - resonation
+    - repeat
+    - mirror image
+  fiery sky:
+    - orange sky
+    - red sky
+    - vibrant sky
+    - colorful sky
+    - dramatic sky
+  amber sky:
+    - orange sky
+    - yellow-orange sky
+    - golden sky
+    - warm sky
+    - sunset sky
+  sunset sky:
+    - evening sky
+    - twilight sky
+    - dusk sky
+    - sky at sunset
+    - sky during sundown
+  colorful sky:
+    - vibrant sky
+    - multicolored sky
+    - rainbow sky
+    - bright sky
+    - sky with many colors
+  vibrant sky:
+    - colorful sky
+    - bright sky
+    - intense sky
+    - lively sky
+    - dynamic sky
+  attention-grabbing:
+    - eye-catching
+    - striking
+    - noticeable
+    - arresting
+    - prominent
+  attention-getting:
+    - eye-catching
+    - noticeable
+    - striking
+    - arresting
+    - prominent
+  noticeable:
+    - eye-catching
+    - visible
+    - perceptible
+    - observable
+    - evident
+  arresting:
+    - eye-catching
+    - striking
+    - captivating
+    - compelling
+    - fascinating
+  standout:
+    - eye-catching
+    - prominent
+    - remarkable
+    - distinctive
+    - conspicuous
+  prominent:
+    - standout
+    - noticeable
+    - conspicuous
+    - obvious
+    - remarkable
+  remarkable:
+    - notable
+    - outstanding
+    - exceptional
+    - striking
+    - standout
+  distinctive:
+    - unique
+    - characteristic
+    - peculiar
+    - special
+    - standout
+  conspicuous:
+    - noticeable
+    - obvious
+    - evident
+    - prominent
+    - standout
+
+common_words:
+    - a
+    - an
+    - the
+    - for
+    - with
+    - of
+    - is
+    - ""
+call_to_action:
+  - "Perfect for projects."
+  - "Ideal for ads."
+  - "Elevate content."
+  - "Make impact."
+  - "Enhance designs."
+  - "Grab attention."
+  - "Vision to life."
+  - "Valuable asset."
+  - "Unlock potential."
+  - "Drive engagement."
+  - "Transform content."
+  - "Add pro touch."
+  - "Stand out now."
+  - "Stunning visuals."
+  - "Inspire audience."
+  - "Boost brand impact."
+  - "Effective message."
+  - "Lasting impression."
+  - "Visual solution."
+  - "Get it now!"
